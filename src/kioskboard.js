@@ -613,14 +613,6 @@
             }
           };
           // keys event listeners: end
-          // format value function: begin
-          var formatInputValue = function (value) {
-            if (typeof opt.formatValueCallback === 'function') {
-              return opt.formatValueCallback(value);
-            }
-            return value;
-          };
-          // format value function: end
           // keys click listeners: begin
           var keysClickListeners = function (input) {
             // each key click listener: begin
@@ -635,8 +627,12 @@
                   var maxLength = (input.getAttribute('maxlength') || '') * 1;
                   var max = (input.getAttribute('max') || '') * 1;
                   var liveValueLength = (input.value || '').length || 0;
-                  if (maxLength > 0 && liveValueLength >= maxLength) { return false; }
-                  if (max > 0 && liveValueLength >= max) { return false; }
+                  if (maxLength > 0 && liveValueLength >= maxLength) {
+                    return false;
+                  }
+                  if (max > 0 && liveValueLength >= max) {
+                    return false;
+                  }
 
                   // input trigger focus
                   input.focus();
@@ -652,26 +648,56 @@
                   }
 
                   var keyValArr = keyValue.split('');
-                  for (var keyValIndex = 0; keyValIndex < keyValArr.length; keyValIndex++) {
+                  for (
+                    var keyValIndex = 0;
+                    keyValIndex < keyValArr.length;
+                    keyValIndex++
+                  ) {
                     // update the selectionStart
-                    theInputSelIndex = input.selectionStart || (input.value || '').length;
+                    theInputSelIndex =
+                      input.selectionStart || (input.value || '').length;
 
                     // add value by index
-                    theInputValArray.splice(theInputSelIndex, 0, keyValArr[keyValIndex]);
-                    // format input value
-                    var formattedInputValue = formatInputValue(theInputValArray.join(''));
-                    // update theInputValArray
-                    theInputValArray = formattedInputValue.split('');
-                    // update input value
-                    input.value = formattedInputValue;
+                    theInputValArray.splice(
+                      theInputSelIndex,
+                      0,
+                      keyValArr[keyValIndex]
+                    );
+                    if (typeof opt.formatValueCallback === 'function') {
+                      opt
+                        .formatValueCallback(theInputValArray.join(''))
+                        .then(function (formattedValue) {
+                          // update theInputValArray
+                          theInputValArray = formattedValue.split('');
+                          // update input value
+                          input.value = formattedValue;
 
-                    // set next selection index
-                    if (input.type !== 'number') {
-                      input.setSelectionRange(theInputSelIndex + 1, theInputSelIndex + 1);
+                          // set next selection index
+                          if (input.type !== 'number') {
+                            input.setSelectionRange(
+                              theInputSelIndex + 1,
+                              theInputSelIndex + 1
+                            );
+                          }
+
+                          // input trigger change event for update the value
+                          input.dispatchEvent(changeEvent);
+                        });
+                    } else {
+                      // update input value
+                      input.value = theInputValArray.join('');
+
+                      // set next selection index
+                      if (input.type !== 'number') {
+                        input.setSelectionRange(
+                          theInputSelIndex + 1,
+                          theInputSelIndex + 1
+                        );
+                      }
+
+                      // input trigger change event for update the value
+                      input.dispatchEvent(changeEvent);
                     }
-
-                    // input trigger change event for update the value
-                    input.dispatchEvent(changeEvent);
                   }
                 });
               }
