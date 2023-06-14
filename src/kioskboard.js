@@ -68,7 +68,6 @@
     keysEnterText: 'Enter',
     keysEnterCallback: undefined,
     keysEnterCanClose: true,
-    formatValueCallback: undefined,
   };
   var kioskBoardCachedKeys;
   var kioskBoardNewOptions;
@@ -362,7 +361,6 @@
           // input element variables: begin
           var theInput = e.currentTarget;
           var theInputSelIndex = 0;
-          var theInputValArray = [];
           var keyboardTypeArray = [kioskBoardTypes.All, kioskBoardTypes.Keyboard, kioskBoardTypes.Numpad];
           var theInputKeyboardType = (theInput.dataset.kioskboardType || '').toLocaleLowerCase('en');
           var keyboardType = keyboardTypeArray.indexOf(theInputKeyboardType) > -1 ? theInputKeyboardType : kioskBoardTypes.All;
@@ -382,9 +380,6 @@
           // update theInputSelIndex on focus
           var theInputValLen = (theInput.value || '').length;
           theInputSelIndex = theInput.selectionStart || theInputValLen;
-
-          // update theInputValArray on focus
-          theInputValArray = theInput.value.split('');
 
           // row keys element
           var keysRowElements = '';
@@ -582,12 +577,7 @@
           theInput.addEventListener('keypress', function (e) {
             // if: allowed real keyboard use
             var allowRealKeyboard = opt.allowRealKeyboard === true;
-            if (allowRealKeyboard) {
-              // update theInputValArray on keypress
-              theInputValArray = e.currentTarget.value.split('');
-            }
-            // else: stop
-            else {
+            if (!allowRealKeyboard) {
               e.stopPropagation();
               e.preventDefault();
               e.returnValue = false;
@@ -613,6 +603,7 @@
             }
           };
           // keys event listeners: end
+
           // keys click listeners: begin
           var keysClickListeners = function (input) {
             // each key click listener: begin
@@ -627,12 +618,8 @@
                   var maxLength = (input.getAttribute('maxlength') || '') * 1;
                   var max = (input.getAttribute('max') || '') * 1;
                   var liveValueLength = (input.value || '').length || 0;
-                  if (maxLength > 0 && liveValueLength >= maxLength) {
-                    return false;
-                  }
-                  if (max > 0 && liveValueLength >= max) {
-                    return false;
-                  }
+                  if (maxLength > 0 && liveValueLength >= maxLength) { return false; }
+                  if (max > 0 && liveValueLength >= max) { return false; }
 
                   // input trigger focus
                   input.focus();
@@ -648,56 +635,20 @@
                   }
 
                   var keyValArr = keyValue.split('');
-                  for (
-                    var keyValIndex = 0;
-                    keyValIndex < keyValArr.length;
-                    keyValIndex++
-                  ) {
+                  for (var keyValIndex = 0; keyValIndex < keyValArr.length; keyValIndex++) {
                     // update the selectionStart
-                    theInputSelIndex =
-                      input.selectionStart || (input.value || '').length;
+                    theInputSelIndex = input.selectionStart || (input.value || '').length;
 
-                    // add value by index
-                    theInputValArray.splice(
-                      theInputSelIndex,
-                      0,
-                      keyValArr[keyValIndex]
-                    );
-                    if (typeof opt.formatValueCallback === 'function') {
-                      opt
-                        .formatValueCallback(theInputValArray.join(''))
-                        .then(function (formattedValue) {
-                          // update theInputValArray
-                          theInputValArray = formattedValue.split('');
-                          // update input value
-                          input.value = formattedValue;
+                    // update input value
+                    input.value = input.value + keyValue;
 
-                          // set next selection index
-                          if (input.type !== 'number') {
-                            input.setSelectionRange(
-                              theInputSelIndex + 1,
-                              theInputSelIndex + 1
-                            );
-                          }
-
-                          // input trigger change event for update the value
-                          input.dispatchEvent(changeEvent);
-                        });
-                    } else {
-                      // update input value
-                      input.value = theInputValArray.join('');
-
-                      // set next selection index
-                      if (input.type !== 'number') {
-                        input.setSelectionRange(
-                          theInputSelIndex + 1,
-                          theInputSelIndex + 1
-                        );
-                      }
-
-                      // input trigger change event for update the value
-                      input.dispatchEvent(changeEvent);
+                    // set next selection index
+                    if (input.type !== 'number') {
+                      input.setSelectionRange(theInputSelIndex + 1, theInputSelIndex + 1);
                     }
+
+                    // input trigger change event for update the value
+                    input.dispatchEvent(changeEvent);
                   }
                 });
               }
@@ -739,11 +690,8 @@
                 // input trigger focus
                 input.focus();
 
-                // remove value by index
-                theInputValArray.splice((theInputSelIndex - 1), 1);
-
                 // update input value
-                input.value = theInputValArray.join('');
+                input.value = input.value.substring(0, input.value.length - 1);
 
                 // set next selection index
                 if (input.type !== 'number') {
