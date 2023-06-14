@@ -69,6 +69,7 @@
     keysEnterText: 'Enter',
     keysEnterCallback: undefined,
     keysEnterCanClose: true,
+    formatValueCallback: undefined,
   };
   var kioskBoardCachedKeys;
   var kioskBoardNewOptions;
@@ -613,7 +614,14 @@
             }
           };
           // keys event listeners: end
-
+          // format value function: begin
+          var formatInputValue = function (value) {
+            if (typeof opt.formatValueCallback === 'function') {
+              return opt.formatValueCallback();
+            }
+            return value;
+          };
+          // format value function: end
           // keys click listeners: begin
           var keysClickListeners = function (input) {
             // each key click listener: begin
@@ -651,9 +659,12 @@
 
                     // add value by index
                     theInputValArray.splice(theInputSelIndex, 0, keyValArr[keyValIndex]);
-
+                    // format input value
+                    var formattedInputValue = formatInputValue(theInputValArray.join(''));
+                    // update theInputValArray
+                    theInputValArray = formattedInputValue.split('');
                     // update input value
-                    input.value = theInputValArray.join('');
+                    input.value = formattedInputValue;
 
                     // set next selection index
                     if (input.type !== 'number') {
