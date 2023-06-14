@@ -617,7 +617,7 @@
           // format value function: begin
           var formatInputValue = function (value) {
             if (typeof opt.formatValueCallback === 'function') {
-              return opt.formatValueCallback();
+              return opt.formatValueCallback(value);
             }
             return value;
           };
